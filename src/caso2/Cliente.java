@@ -27,8 +27,8 @@ public class Cliente {
 	
 	
 	public Cliente() throws Exception{
-		kp = Encriptacion.crearLlaves();
-		clientCert = Encriptacion.crearCertificado(kp);
+		kp = Encriptacion.generacionDeLlaves();
+		clientCert = Encriptacion.crearCertificadoCliente(kp);
 	}
 	
 	public boolean enviarPosicion(String posicion) throws Exception
@@ -41,12 +41,12 @@ public class Cliente {
 		recibirLlave();
 		
 		
-		byte[] cipher = Encriptacion.cifrar(posicion.getBytes(),llaveSesion, ALGORITMOS[0]+PADDING);
+		byte[] cipher = Encriptacion.encriptar(posicion.getBytes(),llaveSesion, ALGORITMOS[0]+PADDING);
 		writer.println("ACT1:"+pasarAString(cipher));
 		
 		
-		byte[] mac = Encriptacion.calcularMAC(posicion.getBytes(), llaveSesion, ALGORITMOS[2]);
-	    writer.println("ACT2:"+pasarAString(Encriptacion.cifrar(mac, serverCert.getPublicKey(),ALGORITMOS[1])));
+		byte[] mac = Encriptacion.calculoDelMac(posicion.getBytes(), llaveSesion, ALGORITMOS[2]);
+	    writer.println("ACT2:"+pasarAString(Encriptacion.encriptar(mac, serverCert.getPublicKey(),ALGORITMOS[1])));
 	    
 	    String linea = reader.readLine();
 	   
@@ -105,7 +105,7 @@ public class Cliente {
 		String linea = reader.readLine();
         byte[] data = extraer(linea.split(":")[1]);
         
-	    byte[] llave = Encriptacion.descifrar(data , kp.getPrivate(),ALGORITMOS[1]);
+	    byte[] llave = Encriptacion.decriptar(data , kp.getPrivate(),ALGORITMOS[1]);
 	    
 		llaveSesion =  new SecretKeySpec(llave, 0, llave.length, ALGORITMOS[1]);
 	}

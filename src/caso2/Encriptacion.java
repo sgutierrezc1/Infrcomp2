@@ -4,7 +4,6 @@ import java.math.BigInteger;
 import java.security.Key;
 import java.security.KeyPair;
 import java.security.KeyPairGenerator;
-import java.security.NoSuchAlgorithmException;
 import java.security.SecureRandom;
 import java.security.Security;
 import java.security.cert.X509Certificate;
@@ -20,62 +19,62 @@ import org.bouncycastle.jce.provider.BouncyCastleProvider;
 import org.bouncycastle.x509.X509V3CertificateGenerator;
 
 public class Encriptacion {
-	public static byte[] descifrar(byte [] data, Key llave, String algoritmo) throws Exception
+	
+
+	public static KeyPair generacionDeLlaves() throws Exception
+	{
+		KeyPairGenerator gen = KeyPairGenerator.getInstance("RSA");
+		gen.initialize(1024, new SecureRandom());
+		return gen.generateKeyPair();
+	}
+
+
+	public static byte[] calculoDelMac(byte[] mensaje, Key llave1, String alg) throws Exception
+	{
+		Mac mac = Mac.getInstance(alg);
+		mac.init(llave1);
+		return mac.doFinal(mensaje);
+	}
+	
+
+	public static byte[] decriptar(byte [] mensaje, Key llave11, String alg) throws Exception
 	{ 
-		Cipher cipher = Cipher.getInstance(algoritmo); 
-		cipher.init(Cipher.DECRYPT_MODE, llave);
-		return cipher.doFinal(data); 
+		Cipher cifrado = Cipher.getInstance(alg); 
+		cifrado.init(Cipher.DECRYPT_MODE, llave11);
+		return cifrado.doFinal(mensaje); 
 	}
 
-	public static byte[] cifrar(byte[] data, Key llave, String algoritmo) throws Exception
-	{
-		Cipher cipher = Cipher.getInstance(algoritmo);
-		cipher.init(Cipher.ENCRYPT_MODE, llave);
-		return cipher.doFinal(data);
-	}
 	
-	public static byte[] calcularMAC(byte[] data, Key llave, String algoritmo) throws Exception
+	public static X509Certificate crearCertificadoCliente(KeyPair par) throws Exception
 	{
-	    Mac mac = Mac.getInstance(algoritmo);
-	    mac.init(llave);
-	    return mac.doFinal(data);
-	}
-	
-	public static KeyPair crearLlaves() throws Exception
-	{
-	    KeyPairGenerator keyGen = KeyPairGenerator.getInstance("RSA");
-	    keyGen.initialize(1024, new SecureRandom());
-	    return keyGen.generateKeyPair();
-	}
-	
-	public static X509Certificate crearCertificado(KeyPair pair) throws Exception
-	{
-		Date startDate = new Date();
-		System.out.println(startDate);
+		Date fecha= new Date();
+		System.out.println(fecha);
 
-		Date expiryDate = new Date(119,0,1);              
-		BigInteger serialNumber = new BigInteger(32,new Random());
-		X509V3CertificateGenerator certGen = new X509V3CertificateGenerator();
-		X500Principal subjectName = new X500Principal("CN=Test V3 Certificate");
-		 
-		certGen.setSerialNumber(serialNumber);
-		certGen.setIssuerDN(new X500Principal("CN=Test Certificate"));
-		certGen.setNotBefore(startDate);
-		certGen.setNotAfter(expiryDate);
-		certGen.setSubjectDN(subjectName);
-		certGen.setPublicKey(pair.getPublic());
-		certGen.setSignatureAlgorithm("SHA256WithRSAEncryption");
-		
-		
+		Date fechaVenc = new Date(119,0,1);              
+		BigInteger num = new BigInteger(32,new Random());
+		X509V3CertificateGenerator certif = new X509V3CertificateGenerator();
+		X500Principal  nombre= new X500Principal("CN=Test V3 Certificate");
+
+		certif.setSerialNumber(num);
+		certif.setIssuerDN(new X500Principal("CN=Test Certificate"));
+		certif.setNotBefore(fecha);
+		certif.setNotAfter(fechaVenc);
+		certif.setSubjectDN(nombre);
+		certif.setPublicKey(par.getPublic());
+		certif.setSignatureAlgorithm("SHA256WithRSAEncryption");
+
+
 		Security.addProvider(new BouncyCastleProvider());
-		
-		return  certGen.generate(pair.getPrivate(), "BC");  
-		  
+
+		return  certif.generate(par.getPrivate(), "BC");  
+
 	}
-	
-	public static Key generarLlave(String algoritmo) throws NoSuchAlgorithmException
+
+
+	public static byte[] encriptar(byte[] mensaje, Key llave1, String alg) throws Exception
 	{
-		KeyGenerator keygen = KeyGenerator.getInstance(algoritmo);
-		return keygen.generateKey();
+		Cipher cifrado = Cipher.getInstance(alg);
+		cifrado.init(Cipher.ENCRYPT_MODE, llave1);
+		return cifrado.doFinal(mensaje);
 	}
 }
