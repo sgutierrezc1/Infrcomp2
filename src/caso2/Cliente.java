@@ -69,6 +69,7 @@ public class Cliente {
 	 * @throws Exception
 	 */
 	public Cliente() throws Exception{
+		
 		keyPair = Encriptacion.generacionDeLlaves();
 		certificadoServidor = Encriptacion.crearCertificadoCliente(keyPair);
 	}
@@ -129,7 +130,7 @@ public class Cliente {
 	 * 
 	 * @throws Exception
 	 */
-	private void recibirCertServer() throws Exception{
+	private void recibirCertificado() throws Exception{
 
 		byte[] bytes = new byte[1000];
 		bytes= Arrays.copyOf(bytes, socket.getInputStream().read(bytes));
@@ -141,10 +142,9 @@ public class Cliente {
 	 * 
 	 * @throws Exception
 	 */
-	private void recibirLlave() throws Exception
-	{
-		String linea = reader.readLine();
-		byte[] data = extraer(linea.split(":")[1]);
+	private void recibirKey() throws Exception{
+		String leido = reader.readLine();
+		byte[] data = extraer(leido.split(":")[1]);
 
 		byte[] llave = Encriptacion.decriptar(data , keyPair.getPrivate(),ALGORITMOS[1]);
 
@@ -156,8 +156,7 @@ public class Cliente {
 	 * @param data
 	 * @return
 	 */
-	private String pasarAString(byte[] data)
-	{
+	private String convertToString(byte[] data){
 		String rta = "";
 		for (byte b: data)
 			rta+= String.format("%2s",Integer.toHexString((char)b & 0xFF)).replace(' ', '0');
@@ -189,14 +188,14 @@ public class Cliente {
 		inicio();
 		enviarAlgoritmos();
 		enviarCertificado();
-		recibirCertServer();
-		recibirLlave();
+		recibirCertificado();
+		recibirKey();
 
 		byte[] cifrado = Encriptacion.encriptar(posicion.getBytes(),secretKey, ALGORITMOS[0]+PADDING);
-		pw.println("ACT1:"+pasarAString(cifrado));
+		pw.println("ACT1:"+convertToString(cifrado));
 
 		byte[] mac = Encriptacion.calculoDelMac(posicion.getBytes(), secretKey, ALGORITMOS[2]);
-		pw.println("ACT2:"+pasarAString(Encriptacion.encriptar(mac, certificadoServidor.getPublicKey(),ALGORITMOS[1])));
+		pw.println("ACT2:"+convertToString(Encriptacion.encriptar(mac, certificadoServidor.getPublicKey(),ALGORITMOS[1])));
 
 		String linea = reader.readLine();
 
@@ -211,8 +210,8 @@ public class Cliente {
 	 */
 	public static void main(String[] args) {
 		try{
-			Cliente c = new Cliente();
-			c.enviarPosicion("41 24.2028, 2 10.4418");
+			Cliente cliente = new Cliente();
+			cliente.enviarPosicion("41 24.2028, 2 10.4418");
 		}
 		catch(Exception e){
 			e.printStackTrace();
