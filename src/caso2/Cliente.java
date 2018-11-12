@@ -10,6 +10,7 @@ import java.security.KeyPair;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.Arrays;
+import java.util.spi.TimeZoneNameProvider;
 
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
@@ -61,6 +62,8 @@ public class Cliente {
 	 * 
 	 */
 	private KeyPair keyPair;
+	
+	private long tiempoRespuesta = 0; 	
 
 
 	//constructor
@@ -79,9 +82,14 @@ public class Cliente {
 	 * @throws Exception
 	 */
 	private void conectar() throws Exception{
+		
+		long ini= System.currentTimeMillis();
 		socket = new Socket("localhost", 6000);
 		reader = new BufferedReader( new InputStreamReader( socket.getInputStream( ) ) );
 		pw = new PrintWriter( socket.getOutputStream( ), true );
+		long fin= System.currentTimeMillis();
+		tiempoRespuesta= fin-ini;
+		System.out.println("Timepo en conectar: "+tiempoRespuesta+"ms");
 
 	}
 
@@ -118,12 +126,15 @@ public class Cliente {
 	 */
 	private void enviarCertificado() throws Exception{
 
+		long ini= System.currentTimeMillis();
 		pw.println("CERTCLNT");
 		socket.getOutputStream().write(certificadoCliente.getEncoded());
 		socket.getOutputStream().flush();
 		System.out.println("SRV: "+reader.readLine());
 		pw.println("ESTADO:OK");
-
+		long fin= System.currentTimeMillis();
+		tiempoRespuesta= fin-ini;
+		System.out.println("Timepo de envío del certificado: "+tiempoRespuesta+"ms");
 	}
 
 	/**
@@ -132,10 +143,14 @@ public class Cliente {
 	 */
 	private void recibirCertificado() throws Exception{
 
+		long ini= System.currentTimeMillis();
 		byte[] bytes = new byte[1000];
 		bytes= Arrays.copyOf(bytes, socket.getInputStream().read(bytes));
 		System.out.print(new String(bytes));
 		certificadoServidor = (X509Certificate)CertificateFactory.getInstance("X.509").generateCertificate(new ByteArrayInputStream(bytes));
+		long fin= System.currentTimeMillis();
+		tiempoRespuesta= fin -ini;
+		System.out.println("Tiempo recepción de certificado: "+tiempoRespuesta+"ms");
 	}
 
 	/**
