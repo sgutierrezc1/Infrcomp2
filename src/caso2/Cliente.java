@@ -95,7 +95,7 @@ public class Cliente {
 	 */
 	private void conectar() throws Exception{
 		
-		socket = new Socket("localhost", 8000);
+		socket = new Socket("localhost", 6000);
 		reader = new BufferedReader( new InputStreamReader( socket.getInputStream( ) ) );
 		pw = new PrintWriter( socket.getOutputStream( ), true );
 
@@ -238,8 +238,8 @@ public class Cliente {
 	
 	
 	private void reportarTiempo() throws Exception {
-		File file1 = new File("data/carga80/threads8/TF.txt");
-		File file2 = new File("data/carga80/threads8/RA.txt");
+		File file1 = new File("data/carga80/threads1/TF.txt");
+		File file2 = new File("data/carga80/threads1/RA.txt");
 
 
 		FileWriter fw1 = new FileWriter(file1.getAbsoluteFile(),true);
