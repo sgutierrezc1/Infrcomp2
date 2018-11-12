@@ -74,7 +74,7 @@ public class Cliente {
 	public Cliente() throws Exception{
 		
 		keyPair = Encriptacion.generacionDeLlaves();
-		certificadoServidor = Encriptacion.crearCertificadoCliente(keyPair);
+		certificadoCliente = Encriptacion.crearCertificadoCliente(keyPair);
 	}
 
 	/**
@@ -84,7 +84,7 @@ public class Cliente {
 	private void conectar() throws Exception{
 		
 		long ini= System.currentTimeMillis();
-		socket = new Socket("localhost", 6000);
+		socket = new Socket("localhost", 8082);
 		reader = new BufferedReader( new InputStreamReader( socket.getInputStream( ) ) );
 		pw = new PrintWriter( socket.getOutputStream( ), true );
 		long fin= System.currentTimeMillis();
@@ -96,7 +96,7 @@ public class Cliente {
 	/**
 	 * 
 	 * @return
-	 * @throws IOException
+	 * @throws IOException	
 	 */
 	private boolean inicio() throws IOException{
 
@@ -224,6 +224,8 @@ public class Cliente {
 	 * @param args
 	 */
 	public static void main(String[] args) {
+		
+		//Generator gen= new Generator();
 		try{
 			Cliente cliente = new Cliente();
 			cliente.enviarPosicion("41 24.2028, 2 10.4418");
