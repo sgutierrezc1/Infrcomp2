@@ -1,7 +1,10 @@
 package caso2;
 
 import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.ByteArrayInputStream;
+import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -65,8 +68,15 @@ public class Cliente {
 	 */
 	private KeyPair keyPair;
 	
-	private long tiempoRespuesta = 0; 	
-
+	/**
+	 * 
+	 */
+	private long tiempoExe = 0;
+	
+	/**
+	 * 
+	 */
+	private long tiempoKey= 0;
 
 	//constructor
 	/**
@@ -85,13 +95,9 @@ public class Cliente {
 	 */
 	private void conectar() throws Exception{
 		
-		long ini= System.currentTimeMillis();
-		socket = new Socket("localhost", 6000);
+		socket = new Socket("localhost", 8000);
 		reader = new BufferedReader( new InputStreamReader( socket.getInputStream( ) ) );
 		pw = new PrintWriter( socket.getOutputStream( ), true );
-		long fin= System.currentTimeMillis();
-		tiempoRespuesta= fin-ini;
-		System.out.println("Timepo en conectar: "+tiempoRespuesta+"ms");
 
 	}
 
@@ -128,15 +134,12 @@ public class Cliente {
 	 */
 	private void enviarCertificado() throws Exception{
 
-		long ini= System.currentTimeMillis();
 		pw.println("CERTCLNT");
 		socket.getOutputStream().write(certificadoCliente.getEncoded());
 		socket.getOutputStream().flush();
 		System.out.println("SRV: "+reader.readLine());
 		pw.println("ESTADO:OK");
-		long fin= System.currentTimeMillis();
-		tiempoRespuesta= fin-ini;
-		System.out.println("Timepo de envío del certificado: "+tiempoRespuesta+"ms");
+
 	}
 
 	/**
@@ -145,13 +148,12 @@ public class Cliente {
 	 */
 	private void recibirCertificado() throws Exception{
 
-		
 		long ini= System.currentTimeMillis();
-		byte[] bytes = new byte[5000];
-		socket.getInputStream().read(bytes);
-		InputStream input= new ByteArrayInputStream(bytes);
-		CertificateFactory factory;
 		try {
+			byte[] bytes = new byte[5000];
+			socket.getInputStream().read(bytes);
+			InputStream input= new ByteArrayInputStream(bytes);
+			CertificateFactory factory;
 			factory = CertificateFactory.getInstance("X.509");
 			X509Certificate server= (X509Certificate)factory.generateCertificate(input);
 			certificadoServidor= server;		
@@ -160,8 +162,7 @@ public class Cliente {
 			e.printStackTrace();
 		}
 		long fin= System.currentTimeMillis();
-		tiempoRespuesta= fin -ini;
-		System.out.println("Tiempo recepción de certificado: "+tiempoRespuesta+"ms");
+		tiempoExe= fin-ini;
 	}
 
 	/**
@@ -169,12 +170,17 @@ public class Cliente {
 	 * @throws Exception
 	 */
 	private void recibirKey() throws Exception{
+		
+		long ini= System.currentTimeMillis();
 		String leido = reader.readLine();
 		byte[] data = extraer(leido.split(":")[1]);
 
 		byte[] llave = Encriptacion.decriptar(data , keyPair.getPrivate(),ALGORITMOS[1]);
 
 		secretKey =  new SecretKeySpec(llave, 0, llave.length, ALGORITMOS[1]);
+		
+		long fin= System.currentTimeMillis();
+		tiempoKey= fin - ini;
 	}
 
 	/**
@@ -225,8 +231,26 @@ public class Cliente {
 
 		String linea = reader.readLine();
 
+		reportarTiempo();
 
 		return linea.equals("ESTADO:OK");
+	}
+	
+	
+	private void reportarTiempo() throws Exception {
+		File file1 = new File("data/carga80/threads8/TF.txt");
+		File file2 = new File("data/carga80/threads8/RA.txt");
+
+
+		FileWriter fw1 = new FileWriter(file1.getAbsoluteFile(),true);
+		BufferedWriter bw1 = new BufferedWriter(fw1);
+		bw1.append(tiempoKey+"/");
+		bw1.close();
+
+		FileWriter fw2 = new FileWriter(file2.getAbsoluteFile(),true);
+		BufferedWriter bw2 = new BufferedWriter(fw2);
+		bw2.append(tiempoExe+"/");
+		bw2.close();
 	}
 
 	//main
@@ -236,9 +260,8 @@ public class Cliente {
 	 */
 	public static void main(String[] args) {
 		
-//		Generator gen= new Generator();
-		ClientServerTask cst= new ClientServerTask();
-		cst.execute();
+		Generator gen= new Generator();
+
 		try{
 			Cliente cliente = new Cliente();
 			cliente.enviarPosicion("41 24.2028, 2 10.4418");
