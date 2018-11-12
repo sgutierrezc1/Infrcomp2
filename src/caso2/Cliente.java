@@ -3,10 +3,12 @@ package caso2;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
 import java.net.Socket;
 import java.security.KeyPair;
+import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
 import java.security.cert.X509Certificate;
 import java.util.Arrays;
@@ -84,7 +86,7 @@ public class Cliente {
 	private void conectar() throws Exception{
 		
 		long ini= System.currentTimeMillis();
-		socket = new Socket("localhost", 8082);
+		socket = new Socket("localhost", 6000);
 		reader = new BufferedReader( new InputStreamReader( socket.getInputStream( ) ) );
 		pw = new PrintWriter( socket.getOutputStream( ), true );
 		long fin= System.currentTimeMillis();
@@ -143,11 +145,20 @@ public class Cliente {
 	 */
 	private void recibirCertificado() throws Exception{
 
+		
 		long ini= System.currentTimeMillis();
-		byte[] bytes = new byte[1000];
-		bytes= Arrays.copyOf(bytes, socket.getInputStream().read(bytes));
-		System.out.print(new String(bytes));
-		certificadoServidor = (X509Certificate)CertificateFactory.getInstance("X.509").generateCertificate(new ByteArrayInputStream(bytes));
+		byte[] bytes = new byte[5000];
+		socket.getInputStream().read(bytes);
+		InputStream input= new ByteArrayInputStream(bytes);
+		CertificateFactory factory;
+		try {
+			factory = CertificateFactory.getInstance("X.509");
+			X509Certificate server= (X509Certificate)factory.generateCertificate(input);
+			certificadoServidor= server;		
+		} catch (CertificateException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 		long fin= System.currentTimeMillis();
 		tiempoRespuesta= fin -ini;
 		System.out.println("Tiempo recepción de certificado: "+tiempoRespuesta+"ms");
@@ -225,7 +236,9 @@ public class Cliente {
 	 */
 	public static void main(String[] args) {
 		
-		//Generator gen= new Generator();
+//		Generator gen= new Generator();
+		ClientServerTask cst= new ClientServerTask();
+		cst.execute();
 		try{
 			Cliente cliente = new Cliente();
 			cliente.enviarPosicion("41 24.2028, 2 10.4418");

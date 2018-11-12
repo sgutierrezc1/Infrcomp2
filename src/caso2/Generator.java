@@ -18,7 +18,6 @@ public class Generator {
 	 */
 	public Generator() {
 		
-		System.out.println("lalalallalala");
 		Task work= createTask();
 		int nTasks= 100;
 		int gapBetweenTasks= 1000;
